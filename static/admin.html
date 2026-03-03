@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDS Soft Biometric SDK — Super Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #334155;
+            --text: #f8fafc;
+            --text2: #94a3b8;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --primary-glow: rgba(139, 92, 246, .2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-subtle: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Login ── */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px;
+            width: 420px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
+        }
+
+        .login-card .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .login-card .subtitle {
+            color: var(--text2);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: .2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: #fff;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px var(--primary-glow);
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, .15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, .3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, .25);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, .15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, .3);
+        }
+
+        .btn-success:hover {
+            background: rgba(16, 185, 129, .25);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-glow);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        /* ── Layout ── */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .sidebar .brand {
+            font-size: 18px;
+            font-weight: 800;
+            padding: 0 12px 24px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar .brand small {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            -webkit-text-fill-color: var(--text2);
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text2);
+            transition: .2s;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-glow);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-subtle);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item .icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            letter-spacing: -0.02em;
+        }
+
+        /* ── Stats Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 48px;
+            opacity: .05;
+            color: var(--primary);
+        }
+
+        /* ── Table ── */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--gradient-subtle);
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 24px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--text2);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        td {
+            padding: 16px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(139, 92, 246, .05);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-active {
+            background: rgba(16, 185, 129, .15);
+            color: var(--success);
+        }
+
+        .badge-inactive {
+            background: rgba(239, 68, 68, .15);
+            color: var(--danger);
+        }
+
+        .badge-plan {
+            background: var(--primary-glow);
+            color: var(--primary);
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 900;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 480px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            font-size: 22px;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .modal .close {
+            float: right;
+            cursor: pointer;
+            color: var(--text2);
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .modal .close:hover {
+            color: var(--text);
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn .3s ease;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+            color: var(--text2);
+        }
+
+        /* ── Responsive ── */
+        .mobile-nav-toggle {
+            display: none;
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 16px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .sidebar .brand {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding: 0;
+            }
+
+            .nav-item {
+                display: none;
+                width: 100%;
+            }
+
+            .nav-item.active {
+                display: flex;
+            }
+
+            .sidebar-footer {
+                border-top: none;
+                padding-top: 0;
+                margin-top: 0;
+                display: none;
+            }
+
+            .mobile-nav-toggle {
+                display: block;
+            }
+
+            .sidebar.nav-open .nav-item {
+                display: flex;
+            }
+
+            .sidebar.nav-open .sidebar-footer {
+                display: block;
+                width: 100%;
+                border-top: 1px solid var(--border);
+                padding-top: 16px;
+                margin-top: 16px;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .login-card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card fade-in">
+            <div class="logo">IDS Soft Biometric</div>
+            <div class="subtitle">Super Admin Panel</div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" value="admin@idssoft.com" placeholder="admin@idssoft.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" value="Admin@123456" placeholder="Enter password">
+            </div>
+            <button class="btn btn-primary w-full" onclick="login()">Sign In</button>
+            <div class="error-msg" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div class="app" id="appContainer" style="display:none;">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand" style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                <div>IDS Soft Biometric<small>Super Admin Panel</small></div>
+                <button class="mobile-nav-toggle"
+                    onclick="document.getElementById('sidebar').classList.toggle('nav-open')">☰</button>
+            </div>
+            <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+                <span class="icon">📊</span> Dashboard
+            </div>
+            <div class="nav-item" onclick="showPage('clients')" data-page="clients">
+                <span class="icon">👥</span> Clients
+            </div>
+            <div class="nav-item" onclick="showPage('plans')" data-page="plans">
+                <span class="icon">💳</span> Plans
+            </div>
+            <div class="sidebar-footer">
+                <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> Logout</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <!-- DASHBOARD -->
+            <div id="page-dashboard" class="page fade-in">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="label">Total Clients</div>
+                        <div class="value loading" id="statClients">—</div>
+                        <div class="icon-bg">👥</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Active API Keys</div>
+                        <div class="value loading" id="statKeys">—</div>
+                        <div class="icon-bg">🔑</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total Subjects</div>
+                        <div class="value loading" id="statSubjects">—</div>
+                        <div class="icon-bg">🧬</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Requests This Month</div>
+                        <div class="value loading" id="statRequests">—</div>
+                        <div class="icon-bg">📈</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLIENTS -->
+            <div id="page-clients" class="page fade-in" style="display:none;">
+                <h1 class="page-title">Clients</h1>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>All Clients</h3>
+                        <div style="display:flex;gap:12px">
+                            <button class="btn btn-primary btn-sm" onclick="openCreateDemoAccount()">+ Demo
+                                Account</button>
+                            <button class="btn btn-primary btn-sm" onclick="openCreateClient()">+ New Client</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Email</th>
+                                    <th>Plan</th>
+                                    <th>Subjects</th>
+                                    <th>Keys</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTable">
+                                <tr>
+                                    <td colspan="7" class="loading" style="text-align:center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLANS -->
+            <div id="page-plans" class="page fade-in" style="display:none;">
+                <h1 class="page-title">Subscription Plans</h1>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Plans</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openCreatePlan()">+ New Plan</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Rate /min</th>
+                                    <th>Max Subjects</th>
+                                    <th>Max Requests/mo</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plansTable">
+                                <tr>
+                                    <td colspan="5" class="loading" style="text-align:center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay hidden" id="modalOverlay">
+        <div class="modal fade-in" id="modalContent"></div>
+    </div>
+
+    <script>
+        const API = '';
+        let token = '';
+
+        async function api(path, opts = {}) {
+            const headers = { 'Content-Type': 'application/json', ...opts.headers };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(API + path, { ...opts, headers });
+            if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || res.statusText); }
+            return res.json();
+        }
+
+        // ── Auth ──
+        async function login() {
+            try {
+                document.getElementById('loginError').textContent = '';
+                const data = await api('/admin/login', {
+                    method: 'POST', body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value,
+                        password: document.getElementById('loginPassword').value,
+                    })
+                });
+                token = data.access_token;
+                localStorage.setItem('admin_token', token);
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('appContainer').style.display = 'flex';
+                loadDashboard();
+            } catch (e) { document.getElementById('loginError').textContent = e.message; }
+        }
+        function logout() { token = ''; localStorage.removeItem('admin_token'); location.reload(); }
+
+        // ── Pages ──
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + name).style.display = 'block';
+            document.querySelector(`[data-page="${name}"]`).classList.add('active');
+            document.getElementById('sidebar').classList.remove('nav-open');
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'clients') loadClients();
+            if (name === 'plans') loadPlans();
+        }
+
+        // ── Dashboard ──
+        async function loadDashboard() {
+            try {
+                const d = await api('/admin/dashboard');
+                document.getElementById('statClients').textContent = d.total_clients;
+                document.getElementById('statKeys').textContent = d.active_api_keys;
+                document.getElementById('statSubjects').textContent = d.total_subjects;
+                document.getElementById('statRequests').textContent = d.requests_this_month.toLocaleString();
+                document.querySelectorAll('.stat-card .value').forEach(v => v.classList.remove('loading'));
+            } catch (e) { console.error(e); }
+        }
+
+        // ── Clients ──
+        async function loadClients() {
+            try {
+                const d = await api('/admin/clients');
+                const tb = document.getElementById('clientsTable');
+                if (!d.clients.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2)">No clients yet</td></tr>'; return; }
+                tb.innerHTML = d.clients.map(c => `<tr>
+            <td><strong>${c.company_name}</strong></td>
+            <td style="color:var(--text2)">${c.email}</td>
+            <td><span class="badge badge-plan">${c.plan_name || '—'}</span></td>
+            <td>${c.total_subjects ?? 0}</td>
+            <td>${c.active_keys ?? 0}</td>
+            <td><span class="badge ${c.is_active ? 'badge-active' : 'badge-inactive'}">${c.is_active ? 'Active' : 'Suspended'}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewClient(${c.id})">View</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteClient(${c.id},'${c.company_name}')">Delete</button>
+            </td>
+        </tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        function openCreateClient() {
+            document.getElementById('modalContent').innerHTML = `
+        <span class="close" onclick="closeModal()">✕</span>
+        <h2>Create New Client</h2>
+        <div class="form-group"><label>Company Name</label><input id="ccName" placeholder="Acme Corp"></div>
+        <div class="form-group"><label>Email</label><input id="ccEmail" type="email" placeholder="client@acme.com"></div>
+        <div class="form-group"><label>Password</label><input id="ccPass" type="password" placeholder="Min 8 chars"></div>
+        <div class="form-group"><label>Plan ID</label><input id="ccPlan" type="number" value="1" placeholder="1=Free, 2=Pro, 3=Enterprise"></div>
+        <button class="btn btn-primary" onclick="createClient()">Create Client</button>
+        <div class="error-msg" id="ccError"></div>`;
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        async function createClient() {
+            try {
+                await api('/admin/clients', {
+                    method: 'POST', body: JSON.stringify({
+                        company_name: document.getElementById('ccName').value,
+                        email: document.getElementById('ccEmail').value,
+                        password: document.getElementById('ccPass').value,
+                        plan_id: parseInt(document.getElementById('ccPlan').value),
+                    })
+                });
+                closeModal(); loadClients();
+            } catch (e) { document.getElementById('ccError').textContent = e.message; }
+        }
+
+        function openCreateDemoAccount() {
+            document.getElementById('modalContent').innerHTML = `
+        <span class="close" onclick="closeModal()">✕</span>
+        <h2>Create Demo Account</h2>
+        <div class="form-group"><label>Company Name</label><input id="demoName" placeholder="Tech Demo Inc"></div>
+        <div class="form-group"><label>Email</label><input id="demoEmail" type="email" placeholder="demo@example.com"></div>
+        <div class="form-group"><label>Password</label><input id="demoPass" type="password" placeholder="Min 8 chars"></div>
+        <div class="form-group"><label>Expiry (Days)</label><input id="demoExpiry" type="number" value="7" placeholder="e.g. 7 or 14"></div>
+        <button class="btn btn-primary w-full" onclick="createDemoAccount()">Generate Account</button>
+        <div class="error-msg" id="demoError"></div>`;
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        async function createDemoAccount() {
+            try {
+                const res = await api('/admin/demo-account', {
+                    method: 'POST', body: JSON.stringify({
+                        company_name: document.getElementById('demoName').value,
+                        email: document.getElementById('demoEmail').value,
+                        password: document.getElementById('demoPass').value,
+                        expires_in_days: parseInt(document.getElementById('demoExpiry').value),
+                    })
+                });
+                document.getElementById('modalContent').innerHTML = `
+        <span class="close" onclick="closeModal()">✕</span>
+        <h2>Demo Account Created!</h2>
+        <p style="text-align:center; color:var(--text2); margin-bottom:12px;">Copy this API key securely. It operates differently than regular keys and will physically expire on <strong>${new Date(res.expires_at).toLocaleString()}</strong></p>
+        <div style="background:var(--bg); padding:16px; border-radius:8px; word-break:break-all; font-family:monospace; margin-bottom:16px; border:1px solid var(--border)">
+            ${res.api_key}
+        </div>
+        <button class="btn btn-primary w-full" onclick="closeModal()">Done</button>
+        `;
+                loadClients();
+            } catch (e) { document.getElementById('demoError').textContent = e.message; }
+        }
+
+        async function viewClient(id) {
+            try {
+                const c = await api(`/admin/clients/${id}`);
+                document.getElementById('modalContent').innerHTML = `
+            <span class="close" onclick="closeModal()">✕</span>
+            <h2>${c.company_name}</h2>
+            <p style="color:var(--text2);margin-bottom:16px">${c.email} · <span class="badge badge-plan">${c.plan_name}</span></p>
+            <div class="stats-grid" style="margin-bottom:16px">
+                <div class="stat-card"><div class="label">Subjects</div><div class="value" style="font-size:24px">${c.max_subjects}</div></div>
+                <div class="stat-card"><div class="label">Monthly Quota</div><div class="value" style="font-size:24px">${c.max_requests_per_month?.toLocaleString()}</div></div>
+            </div>
+            <h3 style="margin-bottom:12px">Usage</h3>
+            <table><tr><td>Today</td><td>${c.usage?.requests_today || 0}</td></tr>
+            <tr><td>This Month</td><td>${c.usage?.requests_this_month || 0}</td></tr>
+            <tr><td>Total</td><td>${c.usage?.requests_total || 0}</td></tr></table>`;
+                document.getElementById('modalOverlay').classList.remove('hidden');
+            } catch (e) { alert(e.message); }
+        }
+
+        async function deleteClient(id, name) {
+            if (!confirm(`Delete client "${name}"? This cannot be undone.`)) return;
+            try { await api(`/admin/clients/${id}`, { method: 'DELETE' }); loadClients(); }
+            catch (e) { alert(e.message); }
+        }
+
+        // ── Plans ──
+        async function loadPlans() {
+            try {
+                const plans = await api('/admin/plans');
+                const tb = document.getElementById('plansTable');
+                tb.innerHTML = plans.map(p => `<tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.rate_limit_per_minute}</td>
+            <td>${p.max_subjects.toLocaleString()}</td>
+            <td>${p.max_requests_per_month.toLocaleString()}</td>
+            <td>$${p.price_monthly.toFixed(2)}</td>
+        </tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        function openCreatePlan() {
+            document.getElementById('modalContent').innerHTML = `
+        <span class="close" onclick="closeModal()">✕</span>
+        <h2>Create Subscription Plan</h2>
+        <div class="form-group"><label>Name</label><input id="cpName" placeholder="Pro Plus"></div>
+        <div class="form-group"><label>Rate Limit /min</label><input id="cpRate" type="number" value="100"></div>
+        <div class="form-group"><label>Max Subjects</label><input id="cpSubjects" type="number" value="10000"></div>
+        <div class="form-group"><label>Max Requests /month</label><input id="cpRequests" type="number" value="100000"></div>
+        <div class="form-group"><label>Monthly Price ($)</label><input id="cpPrice" type="number" step="0.01" value="49.99"></div>
+        <button class="btn btn-primary" onclick="createPlan()">Create Plan</button>
+        <div class="error-msg" id="cpError"></div>`;
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        async function createPlan() {
+            try {
+                await api('/admin/plans', {
+                    method: 'POST', body: JSON.stringify({
+                        name: document.getElementById('cpName').value,
+                        rate_limit_per_minute: parseInt(document.getElementById('cpRate').value),
+                        max_subjects: parseInt(document.getElementById('cpSubjects').value),
+                        max_requests_per_month: parseInt(document.getElementById('cpRequests').value),
+                        price_monthly: parseFloat(document.getElementById('cpPrice').value),
+                    })
+                });
+                closeModal(); loadPlans();
+            } catch (e) { document.getElementById('cpError').textContent = e.message; }
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
+
+        // ── Init ──
+        window.onload = () => {
+            const saved = localStorage.getItem('admin_token');
+            if (saved) {
+                token = saved; document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('appContainer').style.display = 'flex'; loadDashboard();
+            }
+        };
+    </script>
+</body>
+
+</html>

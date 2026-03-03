@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDS Soft Biometric SDK — Client Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #334155;
+            --border: #334155;
+            --text: #f8fafc;
+            --text2: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-glow: rgba(59, 130, 246, .2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient: linear-gradient(135deg, #3b82f6, #06b6d4);
+            --gradient-subtle: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(6, 182, 212, 0.1));
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Login */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px;
+            width: 420px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
+        }
+
+        .login-card .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .login-card .subtitle {
+            color: var(--text2);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: .2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px var(--primary-glow);
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, .15);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, .3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, .25);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, .15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, .3);
+        }
+
+        .btn-success:hover {
+            background: rgba(16, 185, 129, .25);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-glow);
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        /* Layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .sidebar .brand {
+            font-size: 18px;
+            font-weight: 800;
+            padding: 0 12px 24px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar .brand small {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            -webkit-text-fill-color: var(--text2);
+            margin-top: 4px;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text2);
+            transition: .2s;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-glow);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-subtle);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item .icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            letter-spacing: -0.02em;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: var(--text2);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 48px;
+            opacity: .05;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 3px;
+            transition: width .5s;
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--gradient-subtle);
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 24px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--text2);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        td {
+            padding: 16px 24px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(59, 130, 246, .05);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-active {
+            background: rgba(16, 185, 129, .15);
+            color: var(--success);
+        }
+
+        .badge-inactive {
+            background: rgba(239, 68, 68, .15);
+            color: var(--danger);
+        }
+
+        /* Key display */
+        .key-display {
+            background: var(--bg);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 16px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--primary);
+            position: relative;
+        }
+
+        .key-display .copy-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            padding: 4px 12px;
+            font-size: 11px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 900;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            font-size: 22px;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .modal .close {
+            float: right;
+            cursor: pointer;
+            color: var(--text2);
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .modal .close:hover {
+            color: var(--text);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn .3s ease;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+            color: var(--text2);
+        }
+
+        /* Responsive */
+        .mobile-nav-toggle {
+            display: none;
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 16px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .sidebar .brand {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding: 0;
+            }
+
+            .nav-item {
+                display: none;
+                width: 100%;
+            }
+
+            .nav-item.active {
+                display: flex;
+            }
+
+            .sidebar-footer {
+                border-top: none;
+                padding-top: 0;
+                margin-top: 0;
+                display: none;
+            }
+
+            .mobile-nav-toggle {
+                display: block;
+            }
+
+            .sidebar.nav-open .nav-item {
+                display: flex;
+            }
+
+            .sidebar.nav-open .sidebar-footer {
+                display: block;
+                width: 100%;
+                border-top: 1px solid var(--border);
+                padding-top: 16px;
+                margin-top: 16px;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .login-card {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card fade-in">
+            <div class="logo">IDS Soft Biometric</div>
+            <div class="subtitle">Client Panel</div>
+            <div class="form-group"><label>Email</label><input type="email" id="clientLoginEmail"
+                    placeholder="client@company.com" value="client@company.com" autocomplete="off"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="clientLoginPassword"
+                    placeholder="Enter password" value="Client@123456" autocomplete="off"></div>
+            <button class="btn btn-primary w-full" onclick="login()">Sign In</button>
+            <div class="error-msg" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div class="app" id="appContainer" style="display:none">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand" style="display:flex; justify-content:space-between; align-items:center; width: 100%;">
+                <div>IDS Soft<small>Client Panel</small></div>
+                <button class="mobile-nav-toggle"
+                    onclick="document.getElementById('sidebar').classList.toggle('nav-open')">☰</button>
+            </div>
+            <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span
+                    class="icon">📊</span> Dashboard</div>
+            <div class="nav-item" onclick="showPage('apikeys')" data-page="apikeys"><span class="icon">🔑</span> API
+                Keys</div>
+            <div class="nav-item" onclick="showPage('subjects')" data-page="subjects"><span class="icon">🧬</span>
+                Subjects</div>
+            <div class="nav-item" onclick="showPage('usage')" data-page="usage"><span class="icon">📈</span> Usage</div>
+            <div class="sidebar-footer">
+                <div class="nav-item" onclick="logout()"><span class="icon">🚪</span> Logout</div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <!-- DASHBOARD -->
+            <div id="page-dashboard" class="page fade-in">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">Plan</div>
+                        <div class="value" style="font-size:22px" id="dPlan">—</div>
+                        <div class="icon-bg">💳</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Subjects</div>
+                        <div class="value" id="dSubjects">—</div>
+                        <div class="icon-bg">🧬</div>
+                        <div class="progress-bar">
+                            <div class="fill" id="dSubjectsBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Requests This Month</div>
+                        <div class="value" id="dRequests">—</div>
+                        <div class="icon-bg">📈</div>
+                        <div class="progress-bar">
+                            <div class="fill" id="dRequestsBar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Requests Today</div>
+                        <div class="value" id="dToday">—</div>
+                        <div class="icon-bg">📅</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API KEYS -->
+            <div id="page-apikeys" class="page fade-in" style="display:none">
+                <h1 class="page-title">API Keys</h1>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Your API Keys</h3>
+                        <button class="btn btn-primary btn-sm" onclick="openCreateKey()">+ Generate Key</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Prefix</th>
+                                    <th>Label</th>
+                                    <th>IP Whitelist</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keysTable">
+                                <tr>
+                                    <td colspan="6" class="loading" style="text-align:center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUBJECTS -->
+            <div id="page-subjects" class="page fade-in" style="display:none">
+                <h1 class="page-title">Enrolled Subjects</h1>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Subjects</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Face Images</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectsTable">
+                                <tr>
+                                    <td colspan="3" class="loading" style="text-align:center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USAGE -->
+            <div id="page-usage" class="page fade-in" style="display:none">
+                <h1 class="page-title">Usage Analytics</h1>
+                <div class="stats-grid" id="usageStats"></div>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3>Endpoint Breakdown (This Month)</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>Requests</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usageTable">
+                                <tr>
+                                    <td colspan="2" class="loading" style="text-align:center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay hidden" id="modalOverlay">
+        <div class="modal fade-in" id="modalContent"></div>
+    </div>
+
+    <script>
+        const API = '';
+        let token = '';
+
+        async function api(path, opts = {}) {
+            const headers = { 'Content-Type': 'application/json', ...opts.headers };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const res = await fetch(API + path, { ...opts, headers });
+            if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || res.statusText); }
+            return res.json();
+        }
+
+        async function login() {
+            try {
+                document.getElementById('loginError').textContent = '';
+                const d = await api('/client/login', {
+                    method: 'POST', body: JSON.stringify({
+                        email: document.getElementById('clientLoginEmail').value,
+                        password: document.getElementById('clientLoginPassword').value,
+                    })
+                });
+                token = d.access_token;
+                localStorage.setItem('client_token', token);
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('appContainer').style.display = 'flex';
+                loadDashboard();
+            } catch (e) { document.getElementById('loginError').textContent = e.message; }
+        }
+        function logout() { token = ''; localStorage.removeItem('client_token'); location.reload(); }
+
+        function showPage(name) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + name).style.display = 'block';
+            document.querySelector(`[data-page="${name}"]`)?.classList.add('active');
+            document.getElementById('sidebar').classList.remove('nav-open');
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'apikeys') loadKeys();
+            if (name === 'subjects') loadSubjects();
+            if (name === 'usage') loadUsage();
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            try {
+                const d = await api('/client/dashboard');
+                document.getElementById('dPlan').textContent = d.plan_name;
+                document.getElementById('dSubjects').textContent = `${d.current_subjects} / ${d.max_subjects.toLocaleString()}`;
+                document.getElementById('dRequests').textContent = `${d.usage.requests_this_month.toLocaleString()} / ${d.max_requests_per_month.toLocaleString()}`;
+                document.getElementById('dToday').textContent = d.usage.requests_today.toLocaleString();
+                document.getElementById('dSubjectsBar').style.width = Math.min(100, (d.current_subjects / d.max_subjects) * 100) + '%';
+                document.getElementById('dRequestsBar').style.width = Math.min(100, (d.usage.requests_this_month / d.max_requests_per_month) * 100) + '%';
+            } catch (e) { console.error(e); }
+        }
+
+        // API Keys
+        async function loadKeys() {
+            try {
+                const keys = await api('/client/api-keys');
+                const tb = document.getElementById('keysTable');
+                if (!keys.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text2)">No API keys yet. Generate one!</td></tr>'; return; }
+                tb.innerHTML = keys.map(k => `<tr>
+            <td><code style="color:var(--primary)">${k.key_prefix}</code></td>
+            <td>${k.label}</td>
+            <td style="color:var(--text2)">${k.ip_whitelist || 'Any'}</td>
+            <td><span class="badge ${k.is_active ? 'badge-active' : 'badge-inactive'}">${k.is_active ? 'Active' : 'Revoked'}</span></td>
+            <td style="color:var(--text2)">${new Date(k.created_at).toLocaleDateString()}</td>
+            <td>
+                ${k.is_active ? `<button class="btn btn-sm btn-outline" onclick="rotateKey(${k.id})">Rotate</button>
+                <button class="btn btn-sm btn-danger" onclick="revokeKey(${k.id})">Revoke</button>` : '—'}
+            </td>
+        </tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        function openCreateKey() {
+            document.getElementById('modalContent').innerHTML = `
+        <span class="close" onclick="closeModal()">✕</span>
+        <h2>Generate API Key</h2>
+        <div class="form-group"><label>Label</label><input id="ckLabel" value="production" placeholder="e.g. production, testing"></div>
+        <div class="form-group"><label>IP Whitelist (optional, comma-separated)</label><input id="ckIp" placeholder="192.168.1.1,10.0.0.1"></div>
+        <button class="btn btn-primary" onclick="generateKey()">Generate Key</button>
+        <div class="error-msg" id="ckError"></div>`;
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        async function generateKey() {
+            try {
+                const d = await api('/client/api-keys', {
+                    method: 'POST', body: JSON.stringify({
+                        label: document.getElementById('ckLabel').value,
+                        ip_whitelist: document.getElementById('ckIp').value || null,
+                    })
+                });
+                document.getElementById('modalContent').innerHTML = `
+            <span class="close" onclick="closeModal()">✕</span>
+            <h2>⚠️ Save Your API Key</h2>
+            <p style="color:var(--warning);margin-bottom:16px;font-size:14px">This key will NOT be shown again. Copy it now!</p>
+            <div class="key-display">${d.raw_key}<button class="btn btn-sm btn-outline copy-btn" onclick="navigator.clipboard.writeText('${d.raw_key}');this.textContent='Copied!'">Copy</button></div>
+            <p style="color:var(--text2);font-size:13px;margin-top:8px">Prefix: ${d.key_prefix} · Label: ${d.label}</p>
+            <button class="btn btn-primary" style="margin-top:20px" onclick="closeModal();loadKeys()">Done</button>`;
+            } catch (e) { document.getElementById('ckError').textContent = e.message; }
+        }
+
+        async function revokeKey(id) {
+            if (!confirm('Revoke this API key? It will stop working immediately.')) return;
+            try { await api(`/client/api-keys/${id}`, { method: 'DELETE' }); loadKeys(); }
+            catch (e) { alert(e.message); }
+        }
+
+        async function rotateKey(id) {
+            if (!confirm('Rotate this key? The old key will be revoked and a new one generated.')) return;
+            try {
+                const d = await api(`/client/api-keys/${id}/rotate`, { method: 'POST' });
+                document.getElementById('modalContent').innerHTML = `
+            <span class="close" onclick="closeModal()">✕</span>
+            <h2>🔄 Key Rotated</h2>
+            <p style="color:var(--warning);margin-bottom:16px">Old key revoked. Save the new key!</p>
+            <div class="key-display">${d.raw_key}<button class="btn btn-sm btn-outline copy-btn" onclick="navigator.clipboard.writeText('${d.raw_key}');this.textContent='Copied!'">Copy</button></div>
+            <button class="btn btn-primary" style="margin-top:20px" onclick="closeModal();loadKeys()">Done</button>`;
+                document.getElementById('modalOverlay').classList.remove('hidden');
+            } catch (e) { alert(e.message); }
+        }
+
+        // Subjects
+        async function loadSubjects() {
+            try {
+                const d = await api('/client/subjects');
+                const tb = document.getElementById('subjectsTable');
+                if (!d.subjects.length) { tb.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text2)">No subjects enrolled</td></tr>'; return; }
+                tb.innerHTML = d.subjects.map(s => `<tr>
+            <td><strong>${s.subject_name}</strong></td>
+            <td>${s.face_count}</td>
+            <td style="color:var(--text2)">${new Date(s.created_at).toLocaleDateString()}</td>
+        </tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        // Usage
+        async function loadUsage() {
+            try {
+                const d = await api('/client/usage');
+                document.getElementById('usageStats').innerHTML = `
+            <div class="stat-card"><div class="label">Today</div><div class="value">${d.requests_today}</div></div>
+            <div class="stat-card"><div class="label">This Month</div><div class="value">${d.requests_this_month.toLocaleString()}</div></div>
+            <div class="stat-card"><div class="label">All Time</div><div class="value">${d.requests_total.toLocaleString()}</div></div>`;
+                const tb = document.getElementById('usageTable');
+                if (!d.endpoint_breakdown.length) { tb.innerHTML = '<tr><td colspan="2" style="text-align:center;color:var(--text2)">No usage data yet</td></tr>'; return; }
+                tb.innerHTML = d.endpoint_breakdown.map(e => `<tr><td><code>${e.endpoint}</code></td><td>${e.cnt}</td></tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('client_token');
+            if (saved) {
+                token = saved; document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('appContainer').style.display = 'flex'; loadDashboard();
+            }
+        };
+    </script>
+</body>
+
+</html>

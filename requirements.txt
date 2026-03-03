@@ -1,0 +1,14 @@
+fastapi==0.115.0
+uvicorn==0.30.0
+tensorflow==2.16.1
+mtcnn==1.0.0
+numpy==1.26.4
+Pillow==10.4.0
+scikit-learn==1.5.1
+python-multipart==0.0.9
+pydantic==2.9.0
+keras-facenet==0.3.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+slowapi==0.1.9
+bcrypt==4.2.0
