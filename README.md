@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🆔 IDS Soft Biometric SDK</h1>
+  <h1 align="center">Biometric SDK</h1>
   <p align="center">
     <strong>Enterprise-Grade Face Biometric Recognition API</strong><br/>
     Powered by TensorFlow · MTCNN · FaceNet
@@ -26,7 +26,7 @@
 
 ## 📖 Overview
 
-**IDS Soft Biometric SDK v2.0** is a production-ready, subscription-based **Face Biometric Recognition API** built on top of **FastAPI** and **TensorFlow**. It enables developers to integrate advanced face biometric operations — such as **1:1 face verification**, **1:N face identification**, and **subject gallery management** — into any application via a simple REST API.
+**Biometric SDK v2.0** is a production-ready, subscription-based **Face Biometric Recognition API** built on top of **FastAPI** and **TensorFlow**. It enables developers to integrate advanced face biometric operations — such as **1:1 face verification**, **1:N face identification**, and **subject gallery management** — into any application via a simple REST API.
 
 The SDK is designed for **multi-tenant** environments where each client receives isolated data storage, API keys, rate limits, and subscription-tier enforcement. It ships with built-in **Super Admin** and **Client** web dashboards for management, and auto-generated **Swagger** / **ReDoc** interactive API documentation.
 
@@ -223,7 +223,7 @@ All SDK endpoints require an **API Key** passed in the request header. Admin/cli
 ```json
 {
   "status": "healthy",
-  "service": "IDS Soft Biometric SDK",
+  "service": "Biometric SDK",
   "version": "2.0.0"
 }
 ```
@@ -232,14 +232,14 @@ All SDK endpoints require an **API Key** passed in the request header. Admin/cli
 
 ## 🏗️ System Architecture & Workflow
 
-Below is the high-level operational workflow of the IDS Soft Biometric SDK. *(GitHub automatically renders this as an architecture diagram)*:
+Below is the high-level operational workflow of the Biometric SDK. *(GitHub automatically renders this as an architecture diagram)*:
 
 ```mermaid
 graph TD
     %% Entities
     Client((Client App / Web))
         
-    subgraph "IDS Biometric Server &lpar;FastAPI&rpar;"
+    subgraph "Biometric Server &lpar;FastAPI&rpar;"
         Gateway["API Gateway / Router"]
         Auth{"JWT Auth / Tenant Check"}
         
@@ -282,7 +282,7 @@ graph TD
 
 ```mermaid
 mindmap
-  root((IDS Soft Biometric SDK))
+  root((Biometric SDK))
     Biometric Engine
       Face Detection
         MTCNN Detector
@@ -370,7 +370,7 @@ face-biometric-sdk/
 
 ## ☁️ AWS Deployment Guide (Step-by-Step)
 
-This guide will walk you through deploying the IDS Soft Biometric SDK to an **AWS EC2** instance using **Ubuntu** and **Nginx** (as a reverse proxy).
+This guide will walk you through deploying the Biometric SDK to an **AWS EC2** instance using **Ubuntu** and **Nginx** (as a reverse proxy).
 
 <details>
 <summary><strong>📋 Click to expand the full deployment guide</strong></summary>
@@ -448,7 +448,7 @@ sudo nano /etc/systemd/system/biometric.service
 
 ```ini
 [Unit]
-Description=IDS Soft Biometric API Service
+Description=Biometric API Service
 After=network.target
 
 [Service]
@@ -545,11 +545,11 @@ Once deployed, your SDK is accessible at:
 
 ## 📄 License
 
-This project is **proprietary software** by **IDS Soft**. All rights reserved.
+This project is **proprietary software** by **Mohammad007**. All rights reserved.
 
 ---
 
 <p align="center">
-  Made with ❤️ by <strong>IDS Soft</strong><br/>
+  Made with ❤️ by <strong>Mohammad007</strong><br/>
   <a href="https://github.com/Mohammad007/face-biometric-sdk">⭐ Star this repo</a> if you find it useful!
 </p>
