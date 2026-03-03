@@ -550,6 +550,6 @@ This project is **proprietary software** by **Mohammad007**. All rights reserved
 ---
 
 <p align="center">
-  Made with ❤️ by <strong>Mohammad007</strong><br/>
+  Made with ❤️ by <strong>Mohammad007</strong>
   <a href="https://github.com/Mohammad007/face-biometric-sdk">⭐ Star this repo</a> if you find it useful!
 </p>
