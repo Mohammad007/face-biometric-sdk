@@ -17,7 +17,7 @@ except ImportError:
 class Settings:
     """Application settings."""
 
-    APP_TITLE: str = "IDS Soft Biometric SDK"
+    APP_TITLE: str = "DapperDev Biometric SDK"
     APP_DESCRIPTION: str = (
         "Advanced Face Biometric Recognition API powered by TensorFlow."
     )

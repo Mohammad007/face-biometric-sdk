@@ -1,1 +1,1 @@
-# IDS Soft Biometric Library
+# DapperDev Biometric Library

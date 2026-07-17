@@ -1,5 +1,5 @@
 """
-IDS Soft Biometric SDK v2.0 — Subscription-Based Multi-Tenant API
+DapperDev Biometric SDK v2.0 — Subscription-Based Multi-Tenant API
 
 Run: uvicorn app.main:app --reload --port 8000
 Swagger: http://localhost:8000/docs

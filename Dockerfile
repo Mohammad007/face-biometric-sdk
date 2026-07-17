@@ -1,4 +1,4 @@
-# ── IDS Soft Biometric SDK — Railway deployment image ──────────────
+# ── DapperDev Biometric SDK — Railway deployment image ──────────────
 # TensorFlow-based FastAPI service. Python pinned to 3.11 (TF 2.16 does
 # not support 3.13).
 FROM python:3.11-slim
