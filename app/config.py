@@ -5,6 +5,14 @@ Application configuration and settings.
 import os
 from typing import List
 
+try:
+    # Load variables from a local .env file if python-dotenv is installed.
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 
 class Settings:
     """Application settings."""
@@ -36,8 +44,8 @@ class Settings:
     JWT_EXPIRY_HOURS: int = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
 
     # Super Admin (initial credentials — change in production!)
-    SUPER_ADMIN_EMAIL: str = os.getenv("SUPER_ADMIN_EMAIL", "admin@idssoft.com")
-    SUPER_ADMIN_PASSWORD: str = os.getenv("SUPER_ADMIN_PASSWORD", "Admin@123456")
+    SUPER_ADMIN_EMAIL: str = os.getenv("SUPER_ADMIN_EMAIL", "admin@gmail.com")
+    SUPER_ADMIN_PASSWORD: str = os.getenv("SUPER_ADMIN_PASSWORD", "admin@gmail.com")
 
     # Security
     MAX_FAILED_ATTEMPTS: int = 10

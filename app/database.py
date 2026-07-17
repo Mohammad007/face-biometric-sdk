@@ -5,6 +5,7 @@ Tables: subscription_plans, clients, api_keys, api_usage_logs, subjects, face_em
 """
 
 import json
+import os
 import sqlite3
 from datetime import datetime
 from typing import List, Optional, Tuple
@@ -22,6 +23,11 @@ class Database:
 
     def __init__(self, db_path: str = None):
         self.db_path = db_path or settings.DATABASE_PATH
+        # Ensure the parent directory exists (e.g. Railway volume mount at
+        # /app/data) before SQLite tries to open the file.
+        parent = os.path.dirname(self.db_path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
         self._init_db()
 
     def _get_conn(self) -> sqlite3.Connection:
@@ -129,12 +135,24 @@ class Database:
             conn.commit()
 
     def _seed_super_admin(self, conn: sqlite3.Connection):
-        """Seed super admin client if not exists."""
+        """Ensure the super admin exists and its password matches the configured value.
+
+        The configured credentials (env / config) are the source of truth, so an
+        existing super admin's password is re-synced on every startup.
+        """
         row = conn.execute(
             "SELECT id FROM clients WHERE email = ?",
             (settings.SUPER_ADMIN_EMAIL,),
         ).fetchone()
-        if not row:
+        password_hash = pwd_context.hash(settings.SUPER_ADMIN_PASSWORD)
+        if row:
+            # Keep the password in sync with the configured value.
+            conn.execute(
+                "UPDATE clients SET password_hash = ?, is_active = 1 WHERE id = ?",
+                (password_hash, row["id"]),
+            )
+            conn.commit()
+        else:
             # Get Enterprise plan
             plan = conn.execute(
                 "SELECT id FROM subscription_plans WHERE name = 'Enterprise'"
@@ -144,8 +162,8 @@ class Database:
                 conn.execute(
                     "INSERT INTO clients (company_name, email, password_hash, plan_id, created_at) "
                     "VALUES (?, ?, ?, ?, ?)",
-                    ("IDS Soft (Super Admin)", settings.SUPER_ADMIN_EMAIL,
-                     pwd_context.hash(settings.SUPER_ADMIN_PASSWORD), plan["id"], now),
+                    ("DapperDev (Super Admin)", settings.SUPER_ADMIN_EMAIL,
+                     password_hash, plan["id"], now),
                 )
                 conn.commit()
 
@@ -174,8 +192,8 @@ class Database:
     #  SUBSCRIPTION PLANS
     # ══════════════════════════════════════════════
 
-    def create_plan(self, name: str, rate_limit: int, max_subjects: int,
-                    max_requests: int, price: float) -> dict:
+    def create_plan(self, name: str, rate_limit_per_minute: int, max_subjects: int,
+                    max_requests_per_month: int, price_monthly: float) -> dict:
         conn = self._get_conn()
         try:
             now = datetime.utcnow().isoformat()
@@ -183,7 +201,7 @@ class Database:
                 "INSERT INTO subscription_plans "
                 "(name, rate_limit_per_minute, max_subjects, max_requests_per_month, price_monthly, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (name, rate_limit, max_subjects, max_requests, price, now),
+                (name, rate_limit_per_minute, max_subjects, max_requests_per_month, price_monthly, now),
             )
             conn.commit()
             return {"id": cursor.lastrowid, "name": name}
@@ -289,6 +307,10 @@ class Database:
     def delete_client(self, client_id: int) -> bool:
         conn = self._get_conn()
         try:
+            # api_usage_logs has no ON DELETE CASCADE, so clear dependents
+            # explicitly before removing the client. api_keys / subjects
+            # (and their face_embeddings) cascade automatically.
+            conn.execute("DELETE FROM api_usage_logs WHERE client_id = ?", (client_id,))
             cursor = conn.execute("DELETE FROM clients WHERE id = ?", (client_id,))
             conn.commit()
             return cursor.rowcount > 0
