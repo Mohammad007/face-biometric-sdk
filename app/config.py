@@ -29,7 +29,10 @@ class Settings:
     # Face engine settings
     FACE_MATCH_THRESHOLD: float = float(os.getenv("FACE_MATCH_THRESHOLD", "0.65"))
     FACE_IMAGE_SIZE: tuple = (160, 160)
-    MIN_FACE_CONFIDENCE: float = 0.95
+    MIN_FACE_CONFIDENCE: float = float(os.getenv("MIN_FACE_CONFIDENCE", "0.90"))
+    # Minimum fraction of the image the face box must cover (rejects tiny /
+    # far-away or incidental "face-like" detections).
+    MIN_FACE_AREA_RATIO: float = float(os.getenv("MIN_FACE_AREA_RATIO", "0.02"))
 
     # Server
     HOST: str = os.getenv("HOST", "0.0.0.0")

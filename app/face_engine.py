@@ -11,7 +11,7 @@ import logging
 from typing import List, Optional, Tuple
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from app.config import settings
 
@@ -68,7 +68,11 @@ def decode_base64_image(base64_str: str) -> np.ndarray:
             base64_str = base64_str.split(",", 1)[1]
 
         image_bytes = base64.b64decode(base64_str)
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        image = Image.open(io.BytesIO(image_bytes))
+        # Mobile photos carry EXIF orientation; apply it so the face isn't
+        # rotated 90°/180° (a common cause of "no face detected").
+        image = ImageOps.exif_transpose(image)
+        image = image.convert("RGB")
         return np.array(image)
     except Exception as e:
         raise ValueError(f"Failed to decode base64 image: {str(e)}")
@@ -116,6 +120,65 @@ def detect_faces(image_array: np.ndarray) -> List[dict]:
         d for d in detections
         if d["confidence"] >= settings.MIN_FACE_CONFIDENCE
     ]
+
+
+def validate_human_face(detection: dict, image_shape: tuple) -> Tuple[bool, str]:
+    """
+    Verify a detection is a genuine, front-facing HUMAN face — not an animal,
+    object, or a false positive.
+
+    MTCNN is already trained specifically for human faces, but we additionally
+    check facial-landmark geometry and face size so animals/objects and tiny
+    incidental detections are rejected.
+
+    Returns:
+        (is_valid, reason). reason is a user-facing message when invalid.
+    """
+    h_img, w_img = image_shape[0], image_shape[1]
+
+    if detection.get("confidence", 0.0) < settings.MIN_FACE_CONFIDENCE:
+        return False, ("No clear human face detected. Please use a real, "
+                       "front-facing human face.")
+
+    box = detection.get("box")
+    kp = detection.get("keypoints") or {}
+    required = ("left_eye", "right_eye", "nose", "mouth_left", "mouth_right")
+    if not box or any(k not in kp for k in required):
+        return False, ("No human face detected — facial features (eyes, nose, "
+                       "mouth) not found. Animals/objects are not accepted.")
+
+    x, y, w, h = box
+    if w <= 0 or h <= 0:
+        return False, "Invalid face region detected."
+
+    # Face must be reasonably large — rejects tiny/far or incidental detections.
+    area_ratio = (w * h) / float(max(w_img * h_img, 1))
+    if min(w, h) < 60 or area_ratio < settings.MIN_FACE_AREA_RATIO:
+        return False, ("Face is too small or too far away. Move closer so the "
+                       "face fills more of the frame.")
+
+    le, re = kp["left_eye"], kp["right_eye"]
+    nose, ml, mr = kp["nose"], kp["mouth_left"], kp["mouth_right"]
+
+    eye_y = (le[1] + re[1]) / 2.0
+    mouth_y = (ml[1] + mr[1]) / 2.0
+    eye_dist = abs(re[0] - le[0])
+
+    # A real frontal human face: eyes above nose above mouth.
+    if not (eye_y < nose[1] < mouth_y):
+        return False, ("No clear human face detected. Please face the camera "
+                       "directly.")
+
+    # Plausible eye separation relative to face width.
+    if eye_dist < 0.15 * w or eye_dist > 1.1 * w:
+        return False, ("No clear human face detected. Please face the camera "
+                       "directly.")
+
+    # Eyes should be roughly level (not an extreme tilt or a non-face pattern).
+    if abs(re[1] - le[1]) > 0.7 * max(eye_dist, 1.0):
+        return False, "Please keep your head straight and face the camera."
+
+    return True, ""
 
 
 def extract_face(
@@ -190,11 +253,26 @@ def get_embedding_from_base64(base64_str: str) -> np.ndarray:
         ValueError: If no face is detected in the image.
     """
     image_array = decode_base64_image(base64_str)
-    face = extract_face(image_array)
+
+    detections = detect_faces(image_array)
+    if not detections:
+        raise ValueError(
+            "No human face detected in the provided image. "
+            "Ensure it contains a clear, front-facing human face "
+            "(animals and objects are not accepted)."
+        )
+
+    # Use the most confident detection and verify it is a real human face.
+    detection = max(detections, key=lambda d: d["confidence"])
+    is_human, reason = validate_human_face(detection, image_array.shape)
+    if not is_human:
+        raise ValueError(reason)
+
+    face = extract_face(image_array, detection)
     if face is None:
         raise ValueError(
-            "No face detected in the provided image. "
-            "Ensure the image contains a clear, front-facing face."
+            "No human face detected in the provided image. "
+            "Ensure it contains a clear, front-facing human face."
         )
     return get_embedding(face)
 
